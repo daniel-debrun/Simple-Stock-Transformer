@@ -50,9 +50,9 @@ class Databento(DataProvider):
             data.set_index('date', inplace=True)
             # Select and rename required columns
             data = data[['close', 'volume', 'open', 'high', 'low']]
+        
             # Filter data to market open hours
             data = Databento.crop_open_market_data(data)
-            data.reset_index(inplace=True)
             return data
         else:
             print(f"No CSV file found containing the keyword '{ticker}' in the 'decompressed' folder.")
@@ -64,7 +64,7 @@ class YahooFinance(DataProvider):
     Data provider for fetching data from Yahoo Finance.
     """
     # See https://pypi.org/project/yfinance/ for more details on the library
-    def fetch_by_ticker(ticker, start_date='2025-04-11', end_date='2025-04-13', interval='1m'):
+    def fetch_by_ticker(ticker, start_date='2025-04-11', end_date='2025-04-13', interval='1d'):
         """
         Fetches historical data for the given ticker from Yahoo Finance.
         """
@@ -73,14 +73,15 @@ class YahooFinance(DataProvider):
             print("Fetching data for the last week...")
             end_date = datetime.datetime.now()
             start_date = end_date - datetime.timedelta(days=7)
-            data = yf.download(ticker, interval='1m', start=start_date, end=end_date)
+            data = yf.download(ticker, interval='1d', start=start_date, end=end_date)
         else:
             data = yf.download(ticker, interval=interval, start=start_date, end=end_date)
 
         if not data.empty:
             # Reset index and convert datetime to Eastern timezone
             data.reset_index(inplace=True)
-            data['Date'] = pd.to_datetime(data['Datetime']).dt.tz_convert('US/Eastern')
+            # Convert 'Date' to US/Eastern timezone
+            data['Date'] = pd.to_datetime(data['Date']).dt.tz_localize('UTC').dt.tz_convert('US/Eastern')
             # Flatten multi-level columns and rename them
             data.columns = data.columns.get_level_values(0)
             data.index.name = 'Date'
@@ -88,6 +89,10 @@ class YahooFinance(DataProvider):
             data = data[['Open', 'High', 'Low', 'Close', 'Volume', 'Date']]
             data.columns = [col.lower() for col in data.columns]
             data = data[['date', 'close', 'volume', 'open', 'high', 'low']]
+            # Set 'date' as the index
+            data.set_index('date', inplace=True)
+            # Filter data to market open hours
+            data = YahooFinance.crop_open_market_data(data)
             return data
         else:
             print(f"No data found for ticker '{ticker}' on Yahoo Finance.")

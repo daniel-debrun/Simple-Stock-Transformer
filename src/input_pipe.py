@@ -51,49 +51,32 @@ class StockDataset(Dataset):
 
 # Function to load feature dataframes and create a DataLoader
 def format_feature_dataframes(tickers, mode, batch_size=32, shuffle=False):
-    """
-    Load feature dataframes for the specified tickers and mode, and return a DataLoader.
-
-    Args:
-        tickers (list): List of stock tickers to load data for.
-        mode (int): Mode of the model (TRAIN, EVAL, or INFERENCE).
-        batch_size (int): Batch size for the DataLoader.
-        shuffle (bool): Whether to shuffle the data.
-
-    Returns:
-        tuple: (DataLoader, int) where DataLoader is the PyTorch DataLoader and int is the number of feature columns.
-    """
+   
     if len(tickers) > 1:
         raise ValueError("Only one ticker is currently supported.")
 
     # Directory containing the feature dataframes
-    feature_dataframes_dir = 'feature_dataframes'
+    feature_dataframes_dir = 'feature_dataframes/preprocessed/'
 
     # List all files in the directory
     feature_files = os.listdir(feature_dataframes_dir)
 
     # Initialize containers for input features (X) and labels (y)
-    dataframes = {'X': [], 'y': []}
+    dataframes = {'X': np.array([]), 'y': np.array([]), 'mean': np.array([]), 'std': np.array([])}
 
     # Iterate over all files in the directory and process matching tickers
     for file in feature_files:
-        if any(ticker in file for ticker in tickers):
-            file_path = os.path.join(feature_dataframes_dir, file)
-            if not os.path.isfile(file_path):
-                continue
+        with open(os.path.join(feature_dataframes_dir, file), 'rb') as f:
+            data = pickle.load(f)
+            for key in dataframes:
+                if key in data:
+                    if dataframes[key].size == 0:
+                        dataframes[key] = np.array(data[key])
+                    else:
+                        dataframes[key] = np.concatenate([dataframes[key], np.array(data[key])])
 
-            # Load the file using pickle
-            with open(file_path, 'rb') as f:
-                data = pickle.load(f)
-            
-            name = mode_to_name.get(mode)
-            if name is None:
-                raise ValueError("Invalid mode. Use ModelMode.TRAIN, ModelMode.EVAL, or ModelMode.INFERENCE.")
-
-            # Append the data to the respective lists
-            dataframes['X'].append(data[name]['X'])
-            dataframes['y'].append(data[name]['y'])
-            break # Only process the first matching file, only one ticker premitted
+    
+    
 
     # Create a StockDataset instance
     dataset = StockDataset(np.concatenate(dataframes['X']), np.concatenate(dataframes['y']))
@@ -102,3 +85,6 @@ def format_feature_dataframes(tickers, mode, batch_size=32, shuffle=False):
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
 
     return dataloader, dataset.columns
+
+
+

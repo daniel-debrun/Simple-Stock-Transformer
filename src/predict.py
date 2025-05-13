@@ -1,7 +1,7 @@
 import torch
 from preprocess import DataProcessor
 from input_pipe import ModelMode, format_feature_dataframes
-from model import TransformerModel
+from z.StockFormer import TransformerModel
 from evaluate import predict
 import matplotlib.pyplot as plt
 import datetime
