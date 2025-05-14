@@ -7,6 +7,7 @@ from preprocess import DataProcessor
 from input_pipe import ModelMode, format_feature_dataframes
 from model import TransformerModel
 import wandb
+import os
 
 from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
 from tqdm import tqdm
@@ -21,6 +22,8 @@ if device.type == "cpu":
 # Define the training function
 def train_model(model, train_loader, val_loader, optimizer, scheduler, criterion, epochs, save_dict, wandb=False):
     best_val_loss = float('inf')
+    if not os.path.exists('models'):
+        os.makedirs('models')
     model_name = "models/best_model.pth"
     
     patience = 5
@@ -137,13 +140,13 @@ if __name__ == "__main__":
     lag = 60
     lead = 5
     print("Processing data...")
-    tickers = ['AAPL']
+    tickers = ['SPY']
     provider = 'Databento'
     column_to_predict = 'percent_change'
     
     # Initialize and process data using DataProcessor
     processor = DataProcessor(provider, tickers, lag=lag, lead=lead, train_split_amount=0.90, 
-                              val_split_amount=0.05, col_to_predict=column_to_predict, tail=100000)
+                              val_split_amount=0.05, col_to_predict=column_to_predict, tail=10000)
     columns = processor.process_all_tickers()
     print("Data processing complete.")
 

@@ -49,7 +49,7 @@ class DataProcessor:
         print(f"Processing {ticker}")
         # Fetch data for the given ticker
         ticker_df = self.provider.fetch_by_ticker(ticker)
-  
+
         if ticker_df is None:
             return None
 
@@ -75,6 +75,7 @@ class DataProcessor:
             ticker_df = ticker_df.tail(self.tail)
             
         # Reset index count to 0
+        ticker_df.reset_index(inplace=True) # 'date' is the index
         ticker_df.reset_index(drop=True, inplace=True)
 
         # Adjust for stock splits
@@ -87,7 +88,7 @@ class DataProcessor:
         assert self.col_to_predict in ticker_df.columns and not self.col_to_predict.startswith('cat_'), \
                 f"{self.col_to_predict} is not a valid feature column in the dataframe"
         
-        # Fill future expeceted datetime periods
+        # Fill future expected datetime periods
         if self.unknown_y:
             new_rows = pd.DataFrame(0, index=np.arange(self.lead), columns=ticker_df.columns)
             last_date = ticker_df['date'].iloc[-1]
@@ -104,6 +105,8 @@ class DataProcessor:
                 new_rows.at[i - 1, 'date'] = next_date
                 last_date = next_date
             ticker_df = pd.concat([ticker_df, new_rows])
+
+        ticker_df.reset_index(inplace=True)
         
         # Create categorical features
         self.create_categoricals(ticker_df)
@@ -111,7 +114,6 @@ class DataProcessor:
         # Ensure the number of data points is a multiple of lag
         if len(ticker_df) % self.lag != 0:
             ticker_df = ticker_df[(len(ticker_df) % self.lag):]
-            ticker_df.reset_index(drop=True, inplace=True)
         
         print(f"Length of data after applying features: {len(ticker_df) - self.lead}")
 
@@ -126,7 +128,6 @@ class DataProcessor:
         categorical_cols = [col for col in ticker_df.columns if col.startswith('cat_')]
 
         print(f"Number of features: {len(ticker_df.columns.tolist())}")
-        print(ticker_df.columns.tolist())
 
         # Create sequences and labels
         print(f"Creating sequences and labels")

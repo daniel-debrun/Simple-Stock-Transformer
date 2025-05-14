@@ -70,6 +70,8 @@ def format_feature_dataframes(tickers, mode, batch_size=32, shuffle=False):
     feature_dataframes_dir = 'feature_dataframes'
 
     # List all files in the directory
+    if not os.path.exists(feature_dataframes_dir):
+        os.makedirs(feature_dataframes_dir)
     feature_files = os.listdir(feature_dataframes_dir)
 
     # Initialize containers for input features (X) and labels (y)

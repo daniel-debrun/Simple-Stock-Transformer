@@ -1,8 +1,9 @@
 # Stock Prediction Transformer Model
 
 ## Project Overview
+This project implements a stock prediction model using a Transformer architecture. The model predicts stock movements based on historical data and technical indicators. It includes data preprocessing, feature engineering, model training, evaluation, and prediction, demonstrating a full pipeline for time-series forecasting in finance.
 
-This project implements a stock prediction model using a Transformer-based architecture. The model is designed to predict a stock's movements based on historical data and various technical indicators. It includes data preprocessing, feature engineering, model training, evaluation, and prediction.
+![Example Model Output](images/Example.png)
 
 ## File Descriptions
 
@@ -16,5 +17,3 @@ This project implements a stock prediction model using a Transformer-based archi
 - **`predict.py`**: Loads a trained model and performs predictions on new data, followed by evaluation.
 
 ## License & Acknowledgments
-
-This project is licensed under the MIT License.
